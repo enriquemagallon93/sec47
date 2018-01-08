@@ -1,0 +1,34 @@
+<html>
+    <head>
+        <title>
+            47 segundos
+        </title>
+        <script type="text/javascript" src="/javascripts/index.js"></script>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/stylesheets/style.css" rel="stylesheet" type="text/css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    </head>
+    <body>
+        <div class="game-type">
+            <button id="bc" class="btn btn-default"> Consonante </button>
+            <button id="bv" class="btn btn-default"> Vocal </button>
+            <button id="bn" class="btn btn-default"> Números </button>
+            <button id="br" class="btn btn-default"> Ver resultados </button>
+        </div>
+        <div class="timers">
+                <circle-timer containerClass="btn btn-info"></circle-timer>
+                <linear-timer containerClass="btn btn-default"></linear-timer>
+            </div>
+        <item-list>
+        </item-list>
+        <div class="game-type">
+            <item-list itemClass="btn btn-info" id="letras" class="block" type="text"></item-list>
+            <item-list itemClass="btn btn-info" id="numeros" class="block" type="text"></item-list>
+        </div>
+        <voices-selector voiceClass="btn btn-default"></voices-selector>
+        <results-panel>
+            <list-list value="a c a b a b a,e s c o g i a,e s c o b a,c o b i j a b a, a s t i l l a,v a j i l l a">
+            </list-list>  
+        </results-panel>
+    </body> 
+</html>

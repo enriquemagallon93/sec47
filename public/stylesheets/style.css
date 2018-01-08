@@ -1,0 +1,193 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: monospace;
+}
+
+results-panel {
+  padding-top: calc(100% / 3);
+  width: 100%;
+  display: none;
+}
+
+.results-visible results-panel{
+  display: block;
+}
+
+#br {
+  display: none;
+}
+
+.results-ready #br {
+  display: inline-block;
+}
+
+list-list {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: calc(100% / 3);
+  width: 100%;
+  overflow: auto;
+  background-color: white;
+  box-sizing: border-box;
+  border: 3px solid lightblue;
+  border-left: 0;
+  border-right: 0;
+  padding: 10px;
+}
+
+* {
+  font-size: 28px;
+}
+
+.game-type {
+  display: flex;
+  padding: 10px 10px 0 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.btn--small {
+  font-size: 48px;
+  padding: 5px;
+  line-height: 48px;
+  width: 62px;
+  margin: 5px 1px;
+}
+
+.game-type button {
+  padding: 10px;
+  text-transform: uppercase;
+  flex-grow: 1;
+  max-width: 515px;
+  margin: 10px 10px;
+  cursor: pointer;
+}
+
+.playing .game-type button {
+  display: none;
+}
+
+.game-type .block {
+  margin: 10px;
+  padding: 10px 0;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.game-type .block item.btn.btn-info {
+  min-width: 57px;
+  height: 57px;
+  font-size: inherit;
+  display: flex;
+  margin: 5px;
+}
+
+#letras {
+  flex-grow: 2;
+  flex-basis: 632px;
+}
+
+.timers {
+  display: none;
+  width: 100%;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+circle-timer {
+  width: 42px;
+  box-sizing: border-box;
+  margin: 0 10px;
+  flex-shrink: 0;
+}
+
+linear-timer {
+  height: 42px;
+  width: 100%;
+  margin: 0 10px;
+  box-sizing: border-box;
+}
+
+linear-timer container.btn {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: inherit;
+}
+
+circle-timer container.btn.btn-info {
+  padding: 0;
+  width: 100%;
+  border-radius: 50%;
+  background-color: white;
+}
+
+circle-timer container.btn.btn-info timer, linear-timer container.btn timer {
+  background-color: #5bc0de;
+}
+
+voices-selector voice.btn {
+  display: flex;
+  white-space: normal;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.playing .timers {
+  display: flex;
+}
+
+#numeros {
+  flex-grow: 1;
+}
+
+label {
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+}
+
+@media screen and (min-width:  801px){
+
+  body {
+    padding: 0 60px;
+  }
+
+  .game-type {
+    padding: 60px 60px 0 60px;
+  }
+
+  .game-type button {
+    padding: 20px;
+    margin: 15px 20px;
+    font-size: 62px;
+  }
+
+  .game-type .block {
+    margin: 10px;
+    padding: 20px;
+    font-size: 72px;
+    width: 70px;
+  }
+
+  .game-type .block item.btn.btn-info {
+    min-width: 125px;
+    height: 125px;
+  }
+
+  label, label * {
+    font-size: 48px;
+  }
+
+  circle-timer {
+    width: 125px;
+  }
+
+  linear-timer {
+    height: 125px;
+    font-size: 72px;
+  }
+}
