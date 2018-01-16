@@ -13,37 +13,84 @@ Math.nCr = function(n, r) {
     return (this.nPr(n, r) / this.fact(r))
 }
 
-// class Permutation extends Array {
-//     constructor (r=1, repeatIteams = true, generator) {
-//         super();
-//         if (typeof generator !== 'function') throw new Error('"generator" should be a function');
-//         Object.defineProperties(this, {
-//             r: {
-//                 get () { return r;},
-//                 set (val) {
-//                     if (!typeof val !== 'number') throw new Error('"r" should be an integer');
-//                     if (r<1) r = 1;
-//                 }
-//             },
-//             generator: {
-//                 set (foo) {
-//                     if (typeof foo !== 'function') throw new Error('"generator" should be a function');
-//                     generator = function* () {
-//                         yield* foo(r);
-//                     } 
-//                 }
-//             }
-//         });
-//         generator || (generator = function* exchange() {
-//             let uniqueItems = new Set();
-//             this.every((item) => {
+class Permutation extends Array {
+    constructor (r=1, value =[], generator) {
+        value = Array.from(value);
+        super();
+        Array.prototype.push.apply(this, value);
+        if (generator && typeof generator !== 'function') throw new Error('"generator" should be a function');
+        Object.defineProperties(this, {
+            r: {
+                get () { return r;},
+                set (val) {
+                    if (typeof val !== 'number') throw new Error('"r" should be an integer');
+                    if (val < 1) val = 1;
+                    r = val;
+                }
+            },
+            generator: {
+                set (foo) {
+                    if (typeof foo !== 'function') throw new Error('"generator" should be a function');
+                    generator = function* () {
+                        yield* foo(r);
+                    } 
+                }
+            }
+        });
+        generator || (generator = function* exchange() {
+            function takeR (items, r, p = [], stack = [], uniqueItems = new Set()) {
+				if (!items.length || r < 1) {
+					if (r < 1) {
+                        const key = JSON.stringify(p);
+                        if (!uniqueItems.has(key)) {
+                            stack.push(p);
+                            uniqueItems.add(key);
+                        }
+                    }
+					return stack;
+				}
+				for (let i =0; i < items.length; i++) {
+					const copyOfItems = items.slice(0);
+					const cp = p.slice(0);
+					cp.push(copyOfItems.splice(i,1)[0]);
+					takeR(copyOfItems, r-1, cp, stack, uniqueItems);
+                }
+				return stack;
+			}
+			yield* takeR(this, r);
+        });
 
-//             });
-//         });
+        this[Symbol.iterator] = generator;
+    }
+}
 
-//         this[Symbol.iterator] = generator;
-//     }
-// }
+class Combination extends Permutation {
+    constructor (r=1, value =[], generator) {
+        generator || (generator = function* exchange() {
+            function takeR (items, r, p = [], stack = [], uniqueItems = new Set()) {
+				if (!items.length || r < 1) {
+					if (r < 1) {
+                        const key = JSON.stringify(p.slice(0).sort((a, b) => a < b));
+                        if (!uniqueItems.has(key)) {
+                            stack.push(p);
+                            uniqueItems.add(key);
+                        }
+                    }
+					return stack;
+				}
+				for (let i =0; i < items.length; i++) {
+					const copyOfItems = items.slice(0);
+					const cp = p.slice(0);
+					cp.push(copyOfItems.splice(i,1)[0]);
+					takeR(copyOfItems, r-1, cp, stack, uniqueItems);
+                }
+				return stack;
+			}
+			yield* takeR(this, this.r);
+        });
+        super(r, value, generator);
+    }
+}
 
 var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
                               window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
@@ -495,7 +542,7 @@ const tipos = {
   ]
 };
 
-const playTime = 13;
+const playTime = 47;
 
 let bn, bc, bv, br, vs, cLetras, cNumeros, letterSet = [], goal, voice;
 
@@ -565,8 +612,260 @@ function prepareWordsSolution (word) {
     .map(w => w.split('').join(' ').toUpperCase())));
 }
 
+class Operation extends Number {
+    constructor (value) {
+        let r = 0;
+        let history = '';
+
+        const setValue = v => {
+            if (typeof v === 'undefined') return;
+            if (typeof v !== 'number') throw new Error('Need a number');
+            r = v;
+            history = `${r}`;
+        }
+
+        const exec = opr => {
+            if (typeof opr !== 'string') throw new Error('Need a string');
+            if(!/^[\d\s\(\)\/x*+-]+$/i.test(opr)) throw new Error('Not a valid operation');
+            opr = opr.replace(/x/ig, '*');
+            return new Function(`return ${opr};`)();
+        }
+
+        if (!/string|number/.test(typeof value)) {
+            if (value instanceof Operation) {
+                setValue(+value);
+                history = value.toString();
+                super(+value);
+            } else {
+               super(); 
+            }
+        } else {
+            if (typeof value === 'string') value = exec(value);
+            if (value) setValue(value);
+            super(value);
+        }
+
+        this.valueOf = () => r;
+        this.toString = () => history;
+
+        Object.defineProperties(this, {
+            value: {
+                get () {return r},
+                set (v) {
+                    setValue(v)
+                }
+            },
+            history: {
+                get () {return history}
+            }
+        });
+
+        this.sum = val => { 
+            const tempH = history;
+            this.value += +val;
+            let sum = val.toString();
+            if (/\D/.test(sum)) sum = `(${sum})`
+            history = `${tempH?`${tempH} + `:``}${sum}`;
+            return this;
+        }
+
+        this.mul = val => {
+            const tempH = history; 
+            this.value *= +val;
+            let sum = val.toString();
+            if (/\D/.test(sum)) sum = `(${sum})`
+            if (r) {
+                history = `${/[+-]/.test(tempH)? `(${tempH})`:`${tempH}`} x ${sum}`
+            } else {
+                history = `${r} x ${sum}`;
+            }
+            return this;
+        }
+
+        this.dif = val => {
+            const tempH = history; 
+            this.value -= +val;
+            let sum = val.toString();
+            if (/\D/.test(sum)) sum = `(${sum})`
+            history = `${tempH?`${tempH} `:``}-${sum}`;
+            return this;
+        }
+
+        this.div = val => {
+            const tempH = history; 
+            this.value /= +val;
+            let sum = val.toString();
+            if (/\D/.test(sum)) sum = `(${sum})`
+            if (r) {
+                history = `${/[+-]/.test(tempH)? `(${tempH})`:`${tempH}`} / ${sum}`
+            } else {
+                history = `${r} / ${sum}`;
+            }
+            return this;
+        }
+
+        this.exec = exec;
+    }
+}
+
+function getAllOperations(a,b) {
+    a = new Operation(a);
+    let M = a, m = a;
+    if ( a > b) m = b;
+    else M = b;
+    return [
+        new Operation(M).sum(m),
+        new Operation(a).dif(b),
+        new Operation(M).mul(m),
+        new Operation(a).div(b)
+    ];
+}
+
+class Numerable {
+    constructor (n) {
+        this.set = (v) => {
+            if (typeof v !== 'number') throw new Error('Need a number');
+            n = Math.floor(v);
+            return this;
+        }
+        if (typeof n !== 'undefined') {
+            this.set(n);
+        } else {
+            this.set(0);
+        }
+        this[Symbol.iterator] = function* (){
+            const step = -1 * (Math.abs(n) / n);
+            for (let i = n; i !== 0; i += step) {
+                yield i;
+            }
+        };
+    }
+}
+
+class Keyable {
+    constructor (items, descriptor) {
+        if (typeof descriptor !== 'function') throw new Error('Need a function as descriptor');
+        let length = (typeof items.length === 'number' && items.length) || items;
+        if (typeof items === 'number') items = Array.from(new Numerable(items)).reverse();
+        if (typeof length !== 'number') throw new Error('Items should be iterable');
+        items.forEach((key, i) => {
+            let value = descriptor(key, i);
+            try {
+                Object.defineProperty(this, `${key}`, {
+                    get () {return value}
+                });
+            }catch(ex) {
+                throw new Error('Items can not content duplicated keys');
+            }
+        });
+        Object.defineProperty(this, 'length', {get () {return length}})
+        this[Symbol.iterator] = function* () {
+            for (let a=0; a < length; a++) {
+                yield this[items[a]];
+            }
+        }
+    }
+}
+
+class OperationsPermutation {
+    constructor(numbers, stop) {
+        numbers = Array.from(numbers);
+        if (typeof foo !== 'function') {
+            stop = () => false;
+        }
+        Object.defineProperties(this, {
+            numbers: {
+                get () {return value;}
+            },
+            stop: {
+                set (foo) {
+                    if (typeof foo !== 'function') throw new Error('Need a function');
+                    stop = foo;
+                }
+            }
+        });
+        
+        const permutations = Array.from(new Permutation(6, numbers));
+        const operations = new Map();
+
+        const allCombinations = [];
+        for (let a=2;a<=numbers.length;a++) {
+            allCombinations.push(...this.getOperationGroups(a));
+        }
+        allCombinations.sort((a, b) => a.reduce((p, c) => p + c, 0) - b.reduce((p, c) => p + c, 0));
+
+        console.log('hola')
+
+    }
+
+    getAllNumbers (l,n) {
+        const [numbers, uniques ]= [[], new Set()];
+        for (let s = l; s <= n; s += l) {
+            const c = [
+                ...Array.from(new Numerable(s/l)).map(() => l),
+                ...Array.from(new Numerable(n-s)).map(() => 1)
+            ];
+            Array.from(new Permutation(c.length, c)).map(c => c.join(',').replace(/1,1/g, '2').split(',').map(e => +e)).forEach(c => {
+                const k = c.join(',');
+                if (!uniques.has(k)) {
+                    uniques.add(k);
+                    numbers.push(c);
+                }
+            });
+        }
+        return numbers;
+    }
+    
+    getOperationGroups (n) {
+        let allCombinations = [];
+        for (let m = 2; m < n; m++) {
+            allCombinations.push(...this.getAllNumbers(m,n));
+        }
+        return allCombinations;
+    }
+}
+
 function prepareNumbersSolution (numbers, goal) {
-    addSolutions([]);
+    console.log(numbers,goal);
+    let posibilities = new Combination(2,numbers);
+    let solutions = [];
+
+    const add = solution => {
+        if (solutions.find(s => s.toString() === solution.toString())) return;
+        if (+solution % 1 !== 0) return;
+        solutions.push(solution);
+        solutions.sort((a, b) => Math.abs(+a - goal) - Math.abs(+b - goal));
+        solutions = solutions.splice(0, 10);
+    }
+
+    Array.from(posibilities).every(p => {
+        const mult = new Operation(p.join(' x '));
+        add(mult);
+        return solutions.length < 10 || solutions[9] !== goal;
+    });
+    
+    posibilities = new Combination(3,numbers);
+    Array.from(posibilities).every(p => {
+        let grp = new Permutation(2, p);
+        Array.from(grp).every(g => {
+            const g2 = p.reduce((o, c) =>{
+                const isI = o.q.findIndex(q => q === c);
+                if ( isI > -1) o.q.splice(isI, 1);
+                else o.d = c;
+                return o;
+            },{q:g.slice(0),d:null}).d;
+            getAllOperations(...g).every(opr => {
+                getAllOperations(opr, g2).every(cbn => {
+                    add(cbn);
+                    return solutions.length < 10 || solutions[9] !== goal;
+                });
+                return solutions.length < 10 || solutions[9] !== goal;
+            });
+            return solutions.length < 10 || solutions[9] !== goal;
+        });
+        return solutions.length < 10 || solutions[9] !== goal;
+    });
+    addSolutions(solutions.map(s=>`${s.toString()} = ${+s}`));
 }
 
 function showResultsButton (show = true) {
@@ -594,9 +893,10 @@ function addSolutions (solutions) {
 }
 
 function playNumbers () {
+    showResults(false);
     toggleButtons();
     const nn = letterSet = getItems(tipos.numeros, 6);
-    goal = getItems(tipos.numeros.slice(0,9), 3).join('');
+    goal = `${getItems(tipos.numeros.slice(0,9), 1).join('')}${getItems([[0,1], ...tipos.numeros.slice(0,9)], 2).join('')}`
 
     cNumeros.value = '';
     writeItems(letterSet, cLetras).then(()=>{

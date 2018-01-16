@@ -53,7 +53,7 @@ list-list {
   font-size: 48px;
   padding: 5px;
   line-height: 48px;
-  width: 62px;
+  min-width: 62px;
   margin: 5px 1px;
 }
 
